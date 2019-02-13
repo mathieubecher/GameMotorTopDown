@@ -3,6 +3,7 @@
 *.DS_Store
 
 #Visual Studio files
+*.TMP
 *.pidb
 *.userprefs
 *.[Oo]bj
