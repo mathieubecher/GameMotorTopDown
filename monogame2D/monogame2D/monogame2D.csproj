@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{CDF3F5DB-19EB-46A9-8B2B-4B5A9C886F26}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>monogame2D</RootNamespace>
+    <AssemblyName>monogame2D</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <MonoGamePlatform>Windows</MonoGamePlatform>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\$(MonoGamePlatform)\$(Platform)\$(Configuration)\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;WINDOWS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\$(MonoGamePlatform)\$(Platform)\$(Configuration)\</OutputPath>
+    <DefineConstants>TRACE;WINDOWS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Classes\ATHLibrary\Ancre.cs" />
+    <Compile Include="Classes\ATHLibrary\ATH.cs" />
+    <Compile Include="Classes\ATHLibrary\ATHComposite.cs" />
+    <Compile Include="Classes\ATHLibrary\ATHCompositeButton.cs" />
+    <Compile Include="Classes\ATHLibrary\ATHCompositeColor.cs" />
+    <Compile Include="Classes\ATHLibrary\ATHCompositeImage.cs" />
+    <Compile Include="Classes\ATHLibrary\ATHFeuilleColor.cs" />
+    <Compile Include="Classes\ATHLibrary\ATHFeuilleImage.cs" />
+    <Compile Include="Classes\ATHLibrary\ATHFeuilleText.cs" />
+    <Compile Include="Classes\ATHLibrary\ButtonType.cs" />
+    <Compile Include="Classes\ComponentLibrary\NPC\CreatureType.cs" />
+    <Compile Include="Classes\ComponentLibrary\NPC\Joestar\Case.cs" />
+    <Compile Include="Classes\ComponentLibrary\Component.cs" />
+    <Compile Include="Classes\ComponentLibrary\NPC\Joestar\DistanceCompare.cs" />
+    <Compile Include="Classes\ComponentLibrary\NPC\AI.cs" />
+    <Compile Include="Classes\ComponentLibrary\NPC\Joestar\Joestar.cs" />
+    <Compile Include="Classes\ComponentLibrary\NPC\Character.cs" />
+    <Compile Include="Classes\ComponentLibrary\NPC\Speed.cs" />
+    <Compile Include="Classes\ComponentLibrary\NPC\StateAI\SearchState.cs" />
+    <Compile Include="Classes\ComponentLibrary\NPC\StateAI\StandardState.cs" />
+    <Compile Include="Classes\ComponentLibrary\NPC\StateAI\TrackingState.cs" />
+    <Compile Include="Classes\FPS.cs" />
+    <Compile Include="Classes\Game1.cs" />
+    <Compile Include="Classes\MapLibrary\Carto.cs" />
+    <Compile Include="Classes\MapLibrary\CartoManagement.cs" />
+    <Compile Include="Classes\ComponentLibrary\DecorManagement.cs" />
+    <Compile Include="Classes\MapLibrary\DimensionMap.cs" />
+    <Compile Include="Classes\ComponentLibrary\Decor.cs" />
+    <Compile Include="Classes\ComponentLibrary\DrawOrderCompare.cs" />
+    <Compile Include="Classes\MapLibrary\Floor.cs" />
+    <Compile Include="Classes\MapLibrary\HeightCompare.cs" />
+    <Compile Include="Classes\MapLibrary\Map.cs" />
+    <Compile Include="Classes\ComponentLibrary\Sprite.cs" />
+    <Compile Include="Classes\ComponentLibrary\NPC\Player.cs" />
+    <Compile Include="Classes\MapLibrary\Wall.cs" />
+    <Compile Include="Classes\Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="MonoGame.Framework">
+      <HintPath>$(MonoGameInstallDirectory)\MonoGame\v3.0\Assemblies\Windows\MonoGame.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Content\bouton.png" />
+    <Content Include="Icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <MonoGameContentReference Include="Content\Content.mgcb" />
+    <None Include="app.manifest" />
+    <None Include="Content\File.spritefont" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Content.Builder.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

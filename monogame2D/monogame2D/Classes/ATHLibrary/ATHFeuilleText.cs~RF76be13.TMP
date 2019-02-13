@@ -1,0 +1,88 @@
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Content;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace monogame2D.ATH
+{
+	class ATHFeuilleText : ATH
+	{
+		protected SpriteFont font;
+		protected float sizePolice;
+		protected string text;
+		protected Color color;
+		private anchor align;
+
+		protected ATHFeuilleText(ATH parent, Vector2 position, Vector2 size, string text, Color color, float sizePolice, anchor anchor = anchor.topleft, anchor align = anchor.center, int order = 0) : base(parent, position, size, anchor, order)
+		{
+			this.text = text;
+			this.color = color;
+			this.sizePolice = sizePolice;
+			this.align = align;
+		}
+
+		protected override void LoadContent()
+		{
+			font = game.Content.Load<SpriteFont>("File");
+			base.LoadContent();
+		}
+		public override Rectangle RealPos()
+		{
+			Rectangle realPos = base.RealPos();
+			int x = (int)(realPos.X - position.X);
+			int y = (int)(realPos.Y - position.Y);
+			// centre le texte en x
+			if (align == anchor.center || align == anchor.top || align == anchor.bottom)
+				x += realPos.Width / 2 - (int)this.font.MeasureString(text).X / 2;
+			// positionne le texte à droite
+			else if (align == anchor.right || align == anchor.topright || align == anchor.bottomright)
+				x += realPos.Width - (int)this.font.MeasureString(text).X;
+			// centre le texte en y
+			if (align == anchor.center || align == anchor.left || align == anchor.right)
+				y += realPos.Height / 2 - (int)this.font.MeasureString(text).Y / 2;
+			// positionne le texte en bas
+			else if (align == anchor.bottom || align == anchor.bottomleft || align == anchor.bottomright)
+				y += realPos.Height - (int)this.font.MeasureString(text).Y;
+
+			Rectangle textPos = new Rectangle(x,y, (int)this.font.MeasureString(text).X, (int)this.font.MeasureString(text).Y);
+			return textPos;
+
+		}
+
+		public override void Draw(GameTime gameTime)
+		{
+			spriteBatch.Begin();
+
+			
+
+			spriteBatch.DrawString(
+					this.font,
+					this.text,
+					// Centre le texte en fonction de sa taille
+					new Vector2(RealPos().X,RealPos().Y), 
+					color,
+					0,
+					new Vector2(0, 0),
+					sizePolice,
+					SpriteEffects.None,
+					0
+				);
+
+			spriteBatch.End();
+
+			base.Draw(gameTime);
+		}
+		public static ATHFeuilleText Create(ATHComposite parent, Vector2 position, Vector2 size, string text, Color color, float sizePolice, anchor anchor = anchor.topleft, anchor align = anchor.center, int order = 0)
+		{
+			ATHFeuilleText ath = new ATHFeuilleText(parent, position, size, text, color, sizePolice, anchor,align, order);
+			parent.game.Components.Add(ath);
+			parent.add(ath);
+			return ath;
+		}
+	}
+}

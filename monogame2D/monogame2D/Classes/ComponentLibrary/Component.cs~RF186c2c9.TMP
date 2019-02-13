@@ -1,0 +1,324 @@
+﻿using Microsoft.Xna.Framework;
+using monogame2D.MapLibrary;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace monogame2D.ComponentLibrary
+{
+	public class Component : Decor
+	{
+		/*				VARIABLES				*/
+		// détermine si l'objet doit être mis à jour même si il n'est pas affiché
+		protected bool important = false;
+		
+		// hitbox de l'objet
+		protected Rectangle hitbox;
+
+		/*				CONSTRUCTEUR			*/
+		protected Component(Map map, Vector2 origin, Vector2 position, Vector2 size, float height = 0,bool solid = true) : base(map, origin, position, size, false, height)
+		{
+			this.hitbox = new Rectangle(0, 0,100, 100);
+			this.solid = solid;
+		}
+		protected Component(Map map, Vector2 origin, Vector2 position, Vector2 size, Rectangle hitbox, float height = 0, bool solid = true) : base(map, origin, position, size, false, height)
+		{
+			this.hitbox = hitbox;
+			this.solid = solid;
+		}
+		// Génération d'un composant
+		public static Component Create(Map map, Vector2 origin, Vector2 position, Vector2 size, string texture)
+		{
+			Component c = new Component(map, origin, position, size);
+
+			Sprite s = new Sprite(c, new Vector2(0, 0), texture, new Vector2(100, 100));
+			c.Initialize();
+			c.Sprites.Add(s);
+			s.Initialize();
+			map.Decors.Add(c);
+			
+
+			return c;
+		}
+		// Génération d'un composant
+		public static Component Create(Map map, Vector2 origin, Vector2 position, Vector2 size, string texture, Rectangle hitbox)
+		{
+			Component c = Component.Create(map, origin, position, size, texture);
+			c.hitbox = hitbox;
+
+			return c;
+		}
+
+		// Met à jour automatiquement la hauteur d'un objet si il est plus bas que la plateforme sur laquel il se trouve (comme pour décor mais avec la hibox)
+		public override void GestionHeight()
+		{
+			float minheight = 0;
+			for (int x = (int)(Math.Floor(Origin.X + hitbox.X * size.X / 100)); x < (int)(Math.Ceiling(Origin.X + (hitbox.X + hitbox.Width) * size.X / 100)); ++x)
+			{
+				for (int y = (int)(Math.Floor(Origin.Y + hitbox.Y * size.Y / 100)); y < (int)(Math.Ceiling(Origin.Y + (hitbox.Y + hitbox.Height) * size.Y / 100)); ++y)
+				{
+
+					foreach (Carto f in map.Cartos.Cartos)
+					{
+						if (f.GetCase(x, y) > 0 && f.Height > minheight)
+						{
+							minheight = f.Height;
+						}
+					}
+				}
+
+			}
+			height = minheight;
+		}
+		// Calcul l'odre d'affichage du décor (comme pour décor mais avec la hibox)
+		public override void CalculDrawOrder()
+		{
+			this.DrawOrder = (int)((RealPos().Y + (hitbox.Y + hitbox.Height) * Size.Y / 100 * map.Size.SizeCase.Y) * game.GraphicsDevice.PresentationParameters.BackBufferWidth + RealPos().X + (hitbox.X + hitbox.Width) * Size.X / 100 * map.Size.SizeCase.X);
+		}
+
+		// Déplacement de l'objet après avoir vérifié si il ne rentre pas en collision avec quelque chose
+		public void Move(Vector2 velocity)
+		{
+			velocity = TryCollisionFloor(velocity);
+			this.origin += velocity;
+		}
+
+		// Test si l'objet ne rentre pas en collision avec un sol plus élevé
+		public Vector2 TryCollisionFloor(Vector2 velocity)
+		{
+			// Liste des cases surélevé que l'objet percute
+			List<Vector2> caseIntersect = TryCase(velocity);
+			// Test plusieurs fois l'algoritme pour être sure que l'objet ne percute plus aucun sol surélevé
+			int i = 0;
+			while (i < 2 && caseIntersect.Count > 0)
+			{
+				// Repositionnement de l'objet pour éviter des collision
+				velocity = ActionCollide(caseIntersect, velocity);
+				// Vérifie si la correction est suffisante
+				caseIntersect = TryCase(velocity);
+				i++;
+			}
+			// Si il y'a toujours collision, alors l'objet ne bouge pas
+			if (i >= 2) velocity = Vector2.Zero;
+
+			return velocity;
+		}
+
+		// Teste une à une toute les cases que l'objet touche pour vérifier si il n'entre pas en collision avec un sol surélevé
+		public List<Vector2> TryCase(Vector2 velocity)
+		{
+			// Recherche de toute les cases que l'objet touche
+			int minX = (int)(Math.Floor(Origin.X + hitbox.X * size.X / 100 + velocity.X));
+			int maxX = (int)(Math.Ceiling(Origin.X + (hitbox.X + hitbox.Width) * size.X / 100 + velocity.X));
+			int minY = (int)(Math.Floor(Origin.Y + hitbox.Y * size.Y / 100 + velocity.Y));
+			int maxY = (int)(Math.Ceiling(Origin.Y + (hitbox.Y + hitbox.Height) * size.Y / 100 + velocity.Y));
+
+			List<Vector2> caseTouche = new List<Vector2>();
+
+			// Pour toute les cases que l'objet touche
+			for (int x = minX; x < maxX; ++x)
+			{
+				for (int y = minY; y < maxY; ++y)
+				{
+					// Pour tous les sols de la map
+					for(int c = 0; c < map.Cartos.Cartos.Count; ++c)
+					{
+						// Si il y'a une case surélevé ici
+						if (map.Cartos.Cartos[c].GetCase(x, y) > 0 && map.Cartos.Cartos[c].Height > height)
+						{
+							// Ajout de la case dans la liste des cases ou il y a collision
+							int i = 0;
+							while (i < caseTouche.Count && (caseTouche[i].X != x || caseTouche[i].Y != y)) i++;
+							if (i == caseTouche.Count) caseTouche.Add(new Vector2(x, y));
+						}
+					}
+				}
+			}
+			return caseTouche;
+		}
+		// Correction du déplacement si il y a collision
+		public Vector2 ActionCollide(List<Vector2> caseIntersect, Vector2 velocity)
+		{
+			// Collision avec une case (très complexe)
+			if (caseIntersect.Count == 1)
+			{
+				velocity = CollideMonoCase(caseIntersect[0], velocity);
+			}
+			// Collision avec plusieurs case (très simple)
+			else
+			{
+				velocity = CollideMultiCase(caseIntersect, velocity);
+
+			}
+
+			return velocity;
+		}
+		// Collision avec une case (très complexe)
+		public Vector2 CollideMonoCase(Vector2 caseIntersect, Vector2 velocity)
+		{
+			// si l'objet ne se déplace que sur l'axe x
+			if (velocity.X != 0 && velocity.Y == 0)
+			{
+				velocity.X = ReviseX(velocity.X);
+			}
+			// si l'objet ne se déplace que sur l'axe y
+			else if (velocity.Y != 0 && velocity.X == 0)
+			{
+				velocity.Y = ReviseY(velocity.Y);
+			}
+			// sinon c'est la fète du slip...
+			else
+			{
+				// Calcul de la taille du rectangle résultant de l'intersection entre la hitbox et la case (exprimé en case)
+				float Width = CalculWidth(velocity.X, caseIntersect);
+				float Height = CalculHeight(velocity.Y, caseIntersect);
+				
+				// Si la collision se produit dans un coin
+				if (Width == Height || (Height <= Math.Abs(velocity.Y) && Width <= Math.Abs(velocity.X)))
+				{
+					// On regarde le type de case que l'objet touche
+					int type = 0;
+					
+					foreach (Carto f in map.Cartos.Cartos)
+					{
+						if (f.GetCase((int)caseIntersect.X, (int)caseIntersect.Y) > 0 && f.Height > height)
+							type = f.GetCase((int)caseIntersect.X, (int)caseIntersect.Y);
+					}
+					
+					// S'il s'agit d'un coin à gauche et que l'objet se déplace vers la gauche ou s'il s'agit d'un coin à droite et que l'objet se déplace vers la droite
+					if (((type == Floor.CORNERBL || type == Floor.CORNERTL) && velocity.X < 0) ||
+						((type == Floor.CORNERBR || type == Floor.CORNERTR)) && velocity.X > 0)
+						// Correction du déplacement sur l'axe y
+						velocity.Y = ReviseY(velocity.Y);
+					// Sinon on corrige le déplacement de l'objet sur l'axe x
+					else velocity.X = ReviseX(velocity.X);
+					// Ce raisonenement est un choix purement subjectif que je me ferais une joie de vous expliquer si vous faites l'éffort de lire ce commentaire, ce dont je doute fortement
+				}
+				// Si le rectangle est plus large que haut
+				else if (Width < Height )
+					// Correction du déplacement sur l'axe x
+					velocity.X = ReviseX(velocity.X);
+				// Si le rectangle est plus haut que large
+				else
+					// Correction du déplacement sur l'axe y
+					velocity.Y = ReviseY(velocity.Y);
+			}
+			return velocity;
+		}
+		// Collision avec plusieurs case (très simple)
+		public Vector2 CollideMultiCase(List<Vector2> caseIntersect, Vector2 velocity)
+		{
+			// Recherche le nombre de x et de y différent parmis les cases que touchent l'objet
+			Vector2 v = new Vector2(velocity.X, velocity.Y);
+			List<float> X = new List<float>();
+			List<float> Y = new List<float>();
+			foreach (Vector2 c in caseIntersect)
+			{
+				int i = 0;
+				while (i < X.Count && c.X != X[i]) ++i;
+				if (i == X.Count) X.Add(c.X);
+
+				i = 0;
+				while (i < Y.Count && c.Y != Y[i]) ++i;
+				if (i == Y.Count) Y.Add(c.Y);
+
+			}
+			// Si il y'a plusieurs y différent, on corrige le déplacement de l'objet sur l'axe x
+			if (Y.Count > 1) v.X = ReviseX(velocity.X);
+			// Si il y'a plusieurs x différent, on corrige le déplacement de l'objet sur l'axe y
+			if (X.Count > 1) v.Y = ReviseY(velocity.Y);
+			return v;
+		}
+		// Calcul de la taille du rectangle résultant de l'intersection entre la hitbox et la case (exprimé en case)
+		public float CalculWidth(float x, Vector2 caseIntersect)
+		{
+			float Width = 0;
+			// Si l'objet est à gauche de la case
+			if (Origin.X + hitbox.X * size.X / 100 + x < caseIntersect.X + 1 && Origin.X + hitbox.X * size.X / 100 + x > caseIntersect.X)
+				// x1 + w1 - x2
+				Width = caseIntersect.X + 1 - (Origin.X + hitbox.X * size.X / 100 + x);
+			// Si l'objet est à droite de la case
+			else if (Origin.X + (hitbox.X + hitbox.Width) * size.X / 100 + x > caseIntersect.X && Origin.X + (hitbox.X + hitbox.Width) * size.X / 100 + x < caseIntersect.X + 1)
+				// x2 + w2 - x1
+				Width = Origin.X + (hitbox.X + hitbox.Width) * size.X / 100 + x - (caseIntersect.X);
+
+			// Si l'objet touche l'intégralité de la case
+			else Width = 1;
+
+			return Width;
+		}
+		// Calcul de la taille du rectangle résultant de l'intersection entre la hitbox et la case (exprimé en case)
+		public float CalculHeight(float y, Vector2 caseIntersect)
+		{
+			float Height = 0;
+			// Si l'objet est au dessus de la case
+			if (Origin.Y + hitbox.Y * size.Y / 100 + y < caseIntersect.Y + 1 && Origin.Y + hitbox.Y * size.Y / 100 + y > caseIntersect.Y)
+				// y1 + h1 - y2
+				Height = caseIntersect.Y + 1 - (Origin.Y + hitbox.Y * size.Y / 100 + y);
+			// Si l'objet est en dessous de la case
+			else if (Origin.Y + (hitbox.Y + hitbox.Height) * size.Y / 100 + y > caseIntersect.Y && Origin.Y + (hitbox.Y + hitbox.Height) * size.Y / 100 + y < caseIntersect.Y + 1)
+				// y2 + h2 - y1
+				Height = (Origin.Y + (hitbox.Y + hitbox.Height) * size.Y / 100 + y) - caseIntersect.Y;
+			// Si l'objet touche l'intégralité de la case
+			else Height = 1;
+			return Height;
+		}
+
+
+		// Correction du déplacement sur l'axe x
+		public float ReviseX(float x)
+		{
+			/*
+			if (x > 0)
+			{
+				x = (int)Math.Ceiling(Origin.X + (hitbox.X + hitbox.Width) * size.X / 100)
+					- (hitbox.X + hitbox.Width) * size.X / 100 - Origin.X;
+			}
+			else
+			{
+				x = (int)Math.Floor(Origin.X + hitbox.X * size.X / 100)
+					- hitbox.X * size.X / 100 - origin.X;
+			}
+			if (Math.Abs(x) < 0.00000001) x = 0;
+			*/
+			x = 0;
+			return x;
+		}
+		// Correction du déplacement sur l'axe y
+		public float ReviseY(float y)
+		{
+			/*
+			if (y > 0)
+			{
+				y = (int)Math.Ceiling(Origin.Y + (hitbox.Y + hitbox.Height) * size.Y / 100)
+					- (hitbox.Y + hitbox.Height) * size.Y / 100 - Origin.Y;
+			}
+			else
+			{
+				y = (int)Math.Floor(Origin.Y + hitbox.Y * size.Y / 100)
+					- hitbox.Y * size.Y / 100 - Origin.Y;
+			}
+			if (Math.Abs(y) < 0.00000001) y = 0;
+			*/
+			y = 0;
+			return y;
+		}
+
+		public virtual void TryComponent()
+		{
+			List<Decor> collide = new List<Decor>();
+			foreach (Decor c in map.ToDraw)
+			{
+				if (c.Solid)
+				{
+					Vector2 isCollide = c.Collide(new Vector2(origin.X + hitbox.X * origin.X / 100, origin.Y + hitbox.Y * origin.Y / 100), new Vector2(0, 0));
+					collide.Add(c);
+				}
+			}
+		}
+	}
+
+	
+}

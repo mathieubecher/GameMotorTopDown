@@ -1,0 +1,16 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace monogame2D.MapLibrary
+{
+	class Carto : Floor
+	{
+		private const int nbSprite = 16;
+		public Carto(Map father, string name, DimensionMap size, string texture, int[,] spriteCase, int hauteur = 0):base(game, name,size, texture, nbSprite, spriteCase, hauteur)
+		{
+		}
+	}
+}

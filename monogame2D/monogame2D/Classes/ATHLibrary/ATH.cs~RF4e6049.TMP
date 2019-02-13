@@ -1,0 +1,133 @@
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace monogame2D.ATH
+{
+	public class ATH :DrawableGameComponent
+	{
+		// parent de l'ath
+		protected ATH parent;
+		// position de l'ath calculé en fonction du parent
+		protected Vector2 position;
+		// size de l'ath
+		protected Vector2 size;
+		// position par rapport au parent
+		protected anchor anchor;
+		// ordre d'affichage
+		protected int order;
+		// game ou se trouve l'ath
+		public Game1 game;
+		// outil permettant d'afficher l'ath
+		protected static SpriteBatch spriteBatch;
+
+		// Constructeur sans parent
+		protected ATH(Game1 game, Vector2 position, Vector2 size, anchor anchor = anchor.topleft, int order = 0) : base(game)
+		{
+			this.parent = null;
+			this.position = position;
+			this.size = size;
+			this.anchor = anchor;
+			this.game = game;
+			
+			if (this.parent == null) this.order = 10 + order;
+			else this.order = parent.order + 10 + order;
+			if (size.X == 0 || size.Y == 0)
+			{
+				if (parent != null) this.size = parent.size;
+				else this.size = new Vector2(game.GraphicsDevice.PresentationParameters.BackBufferWidth, game.GraphicsDevice.PresentationParameters.BackBufferHeight);
+			}
+		}
+		// Constructeur avec parent
+		protected ATH(ATH parent, Vector2 position, Vector2 size, anchor anchor = anchor.topleft, int order = 0) : base(parent.game)
+		{
+			this.parent = parent;
+			this.position = position;
+			this.size = size;
+			this.anchor = anchor;
+			this.game = parent.game;
+
+			if (this.parent == null) this.order = 10 + order;
+			else this.order = parent.order + 10 + order;
+			if (size.X == 0 || size.Y == 0)
+			{
+				if (parent != null) this.size = parent.size;
+				else this.size = new Vector2(game.GraphicsDevice.PresentationParameters.BackBufferWidth, game.GraphicsDevice.PresentationParameters.BackBufferHeight);
+			}
+		}
+		protected override void LoadContent()
+		{
+			base.LoadContent();
+			spriteBatch = new SpriteBatch(GraphicsDevice);
+			this.DrawOrder = game.GraphicsDevice.PresentationParameters.BackBufferHeight * 10 + order;
+		}
+
+		public virtual Rectangle RealPos()
+		{
+			Rectangle parentSize;
+			if (parent != null) {
+				parentSize = parent.RealPos();
+			}
+			else parentSize = new Rectangle(0,0,game.GraphicsDevice.PresentationParameters.BackBufferWidth, game.GraphicsDevice.PresentationParameters.BackBufferHeight);
+			Rectangle realPos;
+
+			switch (this.anchor)
+			{
+				case anchor.top:
+					
+					realPos = new Rectangle((int)(parentSize.X + parentSize.Width/2 - this.size.X/2 + this.position.X),
+								(int)(parentSize.Y + this.position.Y), 
+								(int)size.X, (int)size.Y);
+					break;
+				case anchor.topright:
+					realPos = new Rectangle((int)(parentSize.X + parentSize.Width - this.size.X + this.position.X),
+								(int)(parentSize.Y + this.position.Y),
+								(int)size.X, (int)size.Y);
+					break;
+				case anchor.right:
+					realPos = new Rectangle((int)(parentSize.X + parentSize.Width - this.size.X + this.position.X),
+								(int)(parentSize.Y + parentSize.Height / 2 - this.size.Y / 2 + this.position.Y),
+								(int)size.X, (int)size.Y);
+					break;
+				case anchor.bottomright:
+					realPos = new Rectangle((int)(parentSize.X + parentSize.Width - this.size.X + this.position.X),
+								(int)(parentSize.Y + parentSize.Height - this.size.Y + this.position.Y), 
+								(int)size.X, (int)size.Y);
+					break;
+				case anchor.bottom:
+					realPos = new Rectangle((int)(parentSize.X + parentSize.Width / 2 - this.size.X / 2 + this.position.X),
+								(int)(parentSize.Y + parentSize.Height - this.size.Y + this.position.Y), 
+								(int)size.X, (int)size.Y);
+					break;
+				case anchor.bottomleft:
+					realPos = new Rectangle((int)(parentSize.X + this.position.X),
+								(int)(parentSize.Y + parentSize.Height - this.size.Y + this.position.Y), 
+								(int)size.X, (int)size.Y);
+					break;
+				case anchor.left:
+					realPos = new Rectangle((int)(parentSize.X + this.position.X),
+								(int)(parentSize.Y + parentSize.Height / 2 - this.size.Y / 2 + this.position.Y), 
+								(int)size.X, (int)size.Y);
+					break;
+				case anchor.center:
+					realPos = new Rectangle((int)(parentSize.X + parentSize.Width / 2 - this.size.X / 2 + this.position.X),
+								(int)(parentSize.Y + parentSize.Height / 2 - this.size.Y / 2 + this.position.Y),
+								(int)size.X, (int)size.Y);
+					break;
+				default:
+					realPos = new Rectangle((int)(parentSize.X + this.position.X),
+								(int)(parentSize.Y + this.position.Y), 
+								(int)size.X, (int)size.Y);
+					break;
+			}
+
+			return realPos;
+
+		}
+
+	}
+}
